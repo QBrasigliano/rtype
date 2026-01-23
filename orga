@@ -1,0 +1,67 @@
+
+Jour 1 : Setup & Architecture
+✅Structure dossiers finalisée (engine/, server/, client/, assets/)
+✅Créer les CMakeLists.txt pour chaque dossier
+✅Installer Conan + dépendances (SFML ou Raylib, asio pour réseau)
+Premier commit Git
+Objectif : Builder sans erreurs
+
+Jour 2 : Engine Core - Entités
+Créer classe Entity (position, velocity, sprite)
+Créer classe Game (boucle principale)
+Système de gestion des entités (add, remove, update)
+Objectif : Une boucle de jeu qui tourne
+
+Jour 3 : Client - Renderer
+Créer classe Client
+Implémenter le renderer (afficher les entités)
+Gestion des inputs (clavier)
+Objectif : Fenêtre qui affiche quelque chose
+
+Jour 4 : Physics & Collisions
+Système de collision basique (AABB)
+Physics (gravité, vitesse, déplacement)
+Gestion des entités qui se touchent
+Objectif : Détecter les collisions
+
+Jour 5 : Joueur & Ennemis
+Classe Player (hérité d'Entity)
+Classe Enemy (hérité d'Entity)
+Mouvement du joueur (ZQSD/Arrows)
+Spawner d'ennemis basiques
+Objectif : Voir le joueur et des ennemis à l'écran
+
+Jour 6 : Système de tir
+Classe Bullet
+Tir du joueur (barre espace)
+Tir des ennemis
+Destruction quand hors écran
+Objectif : Pouvoir tirer et voir les projectiles
+
+Jour 7 : Gameplay - Vagues & Patterns
+Vagues d'ennemis
+Patterns de mouvement (sinus, descente, etc.)
+Destruction entités quand touchées
+Score + affichage
+Objectif : Gameplay basique jouable
+
+Jour 8 : Server & Réseau (optionnel ou simplifié)
+Server basique qui écoute les connexions
+Envoi de l'état du jeu au client
+Reception des inputs joueur
+Ou : Garder tout en single-player si trop complexe
+Objectif : Multi-joueur OU single-player stable
+
+Jour 9 : Polish & Assets
+Sprites/couleurs pour joueur, ennemis, bullets
+SFX/musique (simple)
+Menu simple (Start/Quit)
+Écran Game Over
+Objectif : Jeu "fini" visuellement
+
+Jour 10 : Tests & Bugfix
+Tester tout le gameplay
+Fixer bugs critiques
+Optimisations si besoin
+Nettoyage code
+Objectif : Jeu fonctionnel et stable

@@ -1,0 +1,5 @@
+cmake -> le standard pour le c++ (multi plateforme aussi mais pas ici)
+conan -> il donwload les dependances raylib, asio ... pour pas avoir a le faire sois mm
+raylib -> biblio graphique simple
+asio -> pour communication réseau
+
