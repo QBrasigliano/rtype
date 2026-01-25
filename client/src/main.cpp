@@ -1,6 +1,8 @@
 #include <iostream>
 
 int main() {
-    std::cout << "RType Client" << std::endl;
+    while(1) {
+        /* code */
+    }
     return 0;
 }

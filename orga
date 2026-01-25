@@ -1,53 +1,127 @@
 
-Jour 1 : Setup & Architecture
-✅Structure dossiers finalisée (engine/, server/, client/, assets/)
-✅Créer les CMakeLists.txt pour chaque dossier
-✅Installer Conan + dépendances (SFML ou Raylib, asio pour réseau)
-Premier commit Git
-Objectif : Builder sans erreurs
+Jour 1 : Setup & Infrastructure ✅
+✅ Structure dossiers finalisée (engine/, server/, client/, assets/)
+✅ CMakeLists.txt pour chaque dossier
+✅ Conan + dépendances (Raylib 5.0, ASIO 1.28.0)
+✅ CMake optimisé macOS (14 cœurs, LTO, SIMD)
+✅ Alias 'rtype-build' fonctionnel
+✅ Compilation sans erreurs
 
-Jour 2 : Engine Core - Entités
-Créer classe Entity (position, velocity, sprite)
-Créer classe Game (boucle principale)
-Système de gestion des entités (add, remove, update)
-Objectif : Une boucle de jeu qui tourne
+Jour 2 : Serveur - Réseau & Protocole ⏳ CURRENT
+✅ 3.1 Protocol.hpp/cpp
+   ✅ Struct Packet + Enums (MessageType, InputType)
+   ✅ CalculateChecksum() + IsValid()
+   ✅ Serialize() (Packet → bytes)
+   ✅ Deserialize() (bytes → Packet)
+   ✅ Checksum 16-bit validation
+   ✅ Test: ✅ Test OK!
+⏳ 3.2 NetworkManager.hpp/cpp (NEXT)
+   ⏳ Sockets TCP ASIO
+   ⏳ Accepter connexions clients
+   ⏳ Envoyer/recevoir paquets
+   ⏳ Gestion erreurs réseau
+⏳ 3.3 ClientRegistry.hpp
+   ⏳ Gestion clients connectés
+   ⏳ ID unique par client
+   ⏳ Mapping client ↔ socket
+⏳ 3.4 GameLogic.hpp
+   ⏳ Entités (joueur, ennemis, bullets)
+   ⏳ Spawn/despawn logique
+   ⏳ Collision détection
+⏳ 3.5 Server.hpp
+   ⏳ Boucle serveur principale
+   ⏳ Coordonner NetworkManager + GameLogic
+   ⏳ Broadcast état du jeu
 
-Jour 3 : Client - Renderer
-Créer classe Client
-Implémenter le renderer (afficher les entités)
-Gestion des inputs (clavier)
-Objectif : Fenêtre qui affiche quelque chose
+Jour 3 : Engine - ECS Architecture
+⏳ 2.1 Entity.hpp/cpp
+   ⏳ Classe Entity (ID, liste components)
+   ⏳ GetComponent<T>() / AddComponent<T>()
+   ⏳ RemoveComponent<T>()
+⏳ 2.2 Component.hpp
+   ⏳ Classe abstraite Component
+   ⏳ Components: Position, Velocity, Sprite, Health
+⏳ 2.3 World.hpp/cpp
+   ⏳ Gestionnaire d entités
+   ⏳ Spawn/Destroy entités
+   ⏳ Gestion des systems
+⏳ 2.4 Engine.hpp/cpp
+   ⏳ Boucle de jeu (Input → Update → Render)
+   ⏳ Delta time
+   ⏳ Fenêtre Raylib
 
-Jour 4 : Physics & Collisions
-Système de collision basique (AABB)
-Physics (gravité, vitesse, déplacement)
-Gestion des entités qui se touchent
-Objectif : Détecter les collisions
+Jour 4 : Client - Renderer & Input
+⏳ 4.1 RenderSystem.hpp/cpp
+   ⏳ Afficher les sprites
+   ⏳ Gestion caméra
+   ⏳ HUD basique (debug)
+⏳ 4.2 InputHandler.hpp/cpp
+   ⏳ Clavier/souris input
+   ⏳ Convertir en actions
+⏳ 4.3 Client.hpp/cpp
+   ⏳ Connexion au serveur
+   ⏳ Recevoir état du jeu
+   ⏳ Affichage synchronisé
+⏳ 4.4 UI Menu
+   ⏳ Écran de démarrage
+   ⏳ Sélection serveur
 
-Jour 5 : Joueur & Ennemis
-Classe Player (hérité d'Entity)
-Classe Enemy (hérité d'Entity)
-Mouvement du joueur (ZQSD/Arrows)
-Spawner d'ennemis basiques
-Objectif : Voir le joueur et des ennemis à l'écran
+Jour 5 : Physique & Collisions
+⏳ 5.1 PhysicsSystem.hpp/cpp
+   ⏳ Mouvement (pos += vel * dt)
+   ⏳ Limite écran
+⏳ 5.2 CollisionSystem.hpp/cpp
+   ⏳ AABB collision detection
+   ⏳ Callback collisions
+⏳ 5.3 Player.hpp/cpp
+   ⏳ Classe joueur (hérité Entity)
+   ⏳ Déplacement (WASD)
+⏳ 5.4 Enemy.hpp/cpp
+   ⏳ Classe ennemi basique
+   ⏳ Mouvement simple
 
-Jour 6 : Système de tir
-Classe Bullet
-Tir du joueur (barre espace)
-Tir des ennemis
-Destruction quand hors écran
-Objectif : Pouvoir tirer et voir les projectiles
+Jour 6 : Gameplay - Tir & Spawn
+⏳ 6.1 Bullet.hpp/cpp
+   ⏳ Classe projectile
+   ⏳ Destruction hors écran
+⏳ 6.2 EnemySpawner.hpp/cpp
+   ⏳ Spawn vagues d ennemis
+   ⏳ Gestion timing
+⏳ 6.3 Player Shoot
+   ⏳ Tir avec barre espace
+   ⏳ Cooldown
+⏳ 6.4 Destruction
+   ⏳ Collision bullet → ennemi
+   ⏳ Gestion mort ennemi
 
-Jour 7 : Gameplay - Vagues & Patterns
-Vagues d'ennemis
-Patterns de mouvement (sinus, descente, etc.)
-Destruction entités quand touchées
-Score + affichage
-Objectif : Gameplay basique jouable
+Jour 7 : Polish & Assets
+⏳ 7.1 Sprites
+   ⏳ Charger assets/textures/
+   ⏳ Joueur, ennemis, bullets
+⏳ 7.2 Score & UI
+   ⏳ Affichage score
+   ⏳ Compteur vies
+⏳ 7.3 Sounds (optionnel)
+   ⏳ Charger assets/sounds/
+   ⏳ Tir, explosion
+⏳ 7.4 Game Over
+   ⏳ Écran fin de partie
 
-Jour 8 : Server & Réseau (optionnel ou simplifié)
-Server basique qui écoute les connexions
-Envoi de l'état du jeu au client
+Jour 8 : Testing & Debug
+⏳ 8.1 Tests unitaires
+   ⏳ Protocol tests
+   ⏳ Collision tests
+⏳ 8.2 Debug réseau
+   ⏳ Vérifier paquets
+   ⏳ Latence
+⏳ 8.3 Performance
+   ⏳ Profiler
+   ⏳ Optimisations
+⏳ 8.4 Bugfix
+   ⏳ Fixer issues critiques
+   ⏳ Polish gameplay
+
+
 Reception des inputs joueur
 Ou : Garder tout en single-player si trop complexe
 Objectif : Multi-joueur OU single-player stable

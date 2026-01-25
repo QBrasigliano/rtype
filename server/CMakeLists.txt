@@ -1,5 +1,6 @@
 add_executable(rtype_server
     src/main.cpp
+    src/Protocol.cpp
     # src/Server.cpp
     # src/Config.cpp
     # src/ClientRegistry.cpp
@@ -18,15 +19,6 @@ add_executable(rtype_server
 target_include_directories(rtype_server
     PRIVATE include
 )
-
-# Configuration spécifique Windows pour éviter les conflits avec Raylib
-if(WIN32)
-    target_compile_definitions(rtype_server PRIVATE
-        NOGDI
-        NOUSER
-        WIN32_LEAN_AND_MEAN
-    )
-endif()
 
 find_package(asio REQUIRED)
 

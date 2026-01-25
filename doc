@@ -1,5 +1,38 @@
-cmake -> le standard pour le c++ (multi plateforme aussi mais pas ici)
-conan -> il donwload les dependances raylib, asio ... pour pas avoir a le faire sois mm
-raylib -> biblio graphique simple
-asio -> pour communication réseau
+compilation: rtype-build
+
+./build/server/rtype_server
+./build/client/rtype_client
+
+cmake                       # le standard pour le c++ (multi plateforme aussi mais pas ici)
+conan                       # il donwload les dependances raylib, asio ... pour pas avoir a le faire sois mm
+raylib                      # biblio graphique simple
+asio                        # pour communication réseau
+
+server et client            # executable
+engine                      # library
+
+Checksum                    # pour verifier les données, c est un nombre qui change avec les données
+
+push_back                   # ajouter qqchose a la fin de la
+static_cast                 # converti un type en autre
+>>                          # garde les bits de gauche
+&                           # garde les bits de droite
+|                           # combine les bits
+
+size_t offset               # position dans le tableau de bytes
+
+bytes_insert()              # insere des bytes a une position donnée
+bytes_end()                 # ajoute des bytes a la fin du tableau
+data_begin(), data_end()    # selection de tt le tableau de bytes
+data.assign()               # remplace tt par ()
+
+push_back(x)                # Ajouter x à la fin
+static_cast<T>(x)           # Convertir x en type T
+x >> 8                      # Décaler x vers la droite de 8 bits
+x & 0xFF                    # Garder seulement les 8 bits de droite
+x | y                       # Combiner x et y
+offset += 2                 # Avancer de 2 positions
+bytes[i]                    # Lire le byte à la position i
+insert()                    # Ajouter une liste
+assign()                    # Remplacer le contenu
 

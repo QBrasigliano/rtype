@@ -1,14 +1,16 @@
 cmake_minimum_required(VERSION 3.15)
 project(rtype)
 
-if(WIN32)
-    add_compile_definitions(
-        NOGDI                    # Évite les conflits CloseWindow/ShowCursor avec Raylib
-        NOUSER                   # Évite les conflits avec les fonctions utilisateur Windows
-        WIN32_LEAN_AND_MEAN      # Réduit la taille des headers Windows
-        _WIN32_WINNT=0x0A00      # Windows 10 (au lieu de 0x0601 pour Windows 7)
-    )
-endif()
+# ========== Optimisations macOS/Apple ==========
+# Optimisations natives pour Apple Silicon/Intel
+add_compile_options(-march=native -mtune=native)
+# Vectorisation SIMD
+add_compile_options(-fvectorize -fslp-vectorize)
+# Optimisations LTO (Link-Time Optimization)
+add_compile_options(-flto=thin)
+add_link_options(-flto=thin)
+# Optimisations supplémentaires
+add_compile_options(-ffast-math -funroll-loops)
 
 include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake OPTIONAL)
 enable_testing()

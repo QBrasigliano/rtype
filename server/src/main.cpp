@@ -1,6 +1,7 @@
-#include <iostream>
+#include "../include/Server.hpp"
+#include "../include/Protocol.hpp"
 
 int main() {
-    std::cout << "RType Server" << std::endl;
-    return 0;
+
+    return EXIT_SUCCESS;
 }
