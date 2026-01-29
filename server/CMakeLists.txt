@@ -1,6 +1,7 @@
 add_executable(rtype_server
     src/main.cpp
     src/Protocol.cpp
+    src/network.cpp
     # src/Server.cpp
     # src/Config.cpp
     # src/ClientRegistry.cpp

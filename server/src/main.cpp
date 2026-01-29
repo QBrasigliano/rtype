@@ -1,7 +1,18 @@
-#include "../include/Server.hpp"
-#include "../include/Protocol.hpp"
+#include "network.hpp"
+#include <iostream>
 
 int main() {
-
-    return EXIT_SUCCESS;
+    NetworkManager manager(4242);  // Port 4242
+    manager.Start();               // Démarrer
+    
+    std::cout << "Serveur en attente de clients..." << std::endl;
+    
+    // Boucle principale
+   while (true) {
+        manager.Update();  // Traiter les événements
+        // Ajouter d'autres trucs du serveur ici
+    }
+    
+    manager.Stop();
+    return 0;
 }

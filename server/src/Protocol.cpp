@@ -6,7 +6,7 @@ uint16_t Packet::CalculateChecksum() const {
     sum += size;
     sum += static_cast<uint8_t>(type);
     
-    // Ajouter tous les bytes de data
+    // Ajouter des bytes de data
     for (uint8_t byte : data)
         sum += byte;
     
@@ -32,7 +32,7 @@ std::vector<uint8_t> Packet::Serialize() const {
     // type
     bytes.push_back(static_cast<uint8_t>(type));
 
-    //s données
+    // données
     bytes.insert(bytes.end(), data.begin(), data.end());
 
     // checksum

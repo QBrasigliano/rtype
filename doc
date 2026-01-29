@@ -36,3 +36,14 @@ bytes[i]                    # Lire le byte à la position i
 insert()                    # Ajouter une liste
 assign()                    # Remplacer le contenu
 
+ASIO                        # entrée / sortie asynchrone  I/O (permet de ne pas attendre une action pour continuer)
+
+try / catch                # gestion des erreurs
+acceptor                   # attend et accepte les connexions client et met en place le socket
+endpoint                   # adresse IP + port
+async_accept               # accepte une connexion sans bloquer
+
+tcp                        # protocole de communication fiable 
+lambda                     # fonction sans nom, qu'on peut passer à d'autres fonctions
+poll_one                   # vérifie et traite une seule opération en attente
+mutable                    # permet de modifier des variables capturées par valeur dans une lambda (pas quz lire)
