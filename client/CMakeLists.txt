@@ -2,13 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 add_executable(rtype_client
     src/main.cpp
-    # src/RTypeGame.cpp
-    # src/EntityFactory.cpp
-    # src/GameCallbacks.cpp
-    # src/network/Client.cpp
-    # src/network/NetworkManager.cpp
-    # src/network/network_handlers.cpp
-    # src/network/Packet.cpp
+    src/Client.cpp
+    ${CMAKE_SOURCE_DIR}/server/src/Protocol.cpp
 )
 
 target_include_directories(rtype_client

@@ -1,4 +1,3 @@
-
 Jour 1 : Setup & Infrastructure ✅
 ✅ Structure dossiers finalisée (engine/, server/, client/, assets/)
 ✅ CMakeLists.txt pour chaque dossier
@@ -7,33 +6,54 @@ Jour 1 : Setup & Infrastructure ✅
 ✅ Alias 'rtype-build' fonctionnel
 ✅ Compilation sans erreurs
 
-Jour 2 : Serveur - Réseau & Protocole ⏳ CURRENT
+Jour 2 : Protocole & Networking ✅
 ✅ 3.1 Protocol.hpp/cpp
-   ✅ Struct Packet + Enums (MessageType, InputType)
+   ✅ Struct Packet + Enums (InputType)
    ✅ CalculateChecksum() + IsValid()
-   ✅ Serialize() (Packet → bytes)
-   ✅ Deserialize() (bytes → Packet)
+   ✅ Serialize() (Packet → bytes, big-endian)
+   ✅ Deserialize() (bytes → Packet avec validation)
    ✅ Checksum 16-bit validation
    ✅ Test: ✅ Test OK!
-⏳ 3.2 NetworkManager.hpp/cpp (NEXT)
-   ⏳ Sockets TCP ASIO
-   ⏳ Accepter connexions clients
-   ⏳ Envoyer/recevoir paquets
-   ⏳ Gestion erreurs réseau
+
+✅ 3.2 NetworkManager.hpp/cpp (SERVEUR)
+   ✅ Sockets TCP ASIO avec async_accept
+   ✅ Accepter connexions clients multiples
+   ✅ async_read en boucle sur chaque socket
+   ✅ Recevoir et désérialiser paquets clients
+   ✅ Gestion erreurs réseau (EOF = client déconnecté)
+   ✅ ID client unique (next_client_id_, incrémental)
+   ✅ Messages: "Client ID: X connecté/déconnecté"
+
+✅ 4.1 Client.hpp/cpp (CLIENT)
+   ✅ Classe Client avec async_connect
+   ✅ Se connecter au serveur (127.0.0.1:12345)
+   ✅ SendPacket() avec async_write
+   ✅ Update() pour traiter événements ASIO
+   ✅ Disconnect() propre
+
+✅ 4.2 Client GUI (main.cpp)
+   ✅ Fenêtre Raylib 1024x768
+   ✅ Cercle bleu contrôlable (flèches)
+   ✅ Limites écran
+   ✅ Fonctions raccourcies: SendMovementPacket(), HandleInput(), Render()
+   ✅ Timer 100ms pour envoyer inputs au serveur
+   ✅ Envoie MOVE_UP/DOWN/LEFT/RIGHT
+
+Jour 3 : En cours
 ⏳ 3.3 ClientRegistry.hpp
-   ⏳ Gestion clients connectés
-   ⏳ ID unique par client
-   ⏳ Mapping client ↔ socket
+   ⏳ Gestion clients connectés sur serveur
+   ⏳ Mapping client ID ↔ socket
+   ⏳ Stockage des données joueur
 ⏳ 3.4 GameLogic.hpp
    ⏳ Entités (joueur, ennemis, bullets)
    ⏳ Spawn/despawn logique
-   ⏳ Collision détection
-⏳ 3.5 Server.hpp
+   ⏳ Collision détection (AABB)
+⏳ 3.5 Server Main Loop
    ⏳ Boucle serveur principale
    ⏳ Coordonner NetworkManager + GameLogic
-   ⏳ Broadcast état du jeu
+   ⏳ Broadcast état du jeu aux clients
 
-Jour 3 : Engine - ECS Architecture
+Jour 4 : Engine - ECS Architecture
 ⏳ 2.1 Entity.hpp/cpp
    ⏳ Classe Entity (ID, liste components)
    ⏳ GetComponent<T>() / AddComponent<T>()

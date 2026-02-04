@@ -2,19 +2,6 @@ add_executable(rtype_server
     src/main.cpp
     src/Protocol.cpp
     src/network.cpp
-    # src/Server.cpp
-    # src/Config.cpp
-    # src/ClientRegistry.cpp
-    # src/GameServer.cpp
-    # src/GameServerInput.cpp
-    # src/GameServerState.cpp
-    # src/EntityFactory.cpp
-    # src/lobby/LobbyManager.cpp
-    # src/lobby/LobbySession.cpp
-    # src/systems/EnemySpawnSystem.cpp
-    # src/systems/EnemyBoundarySystem.cpp
-    # src/systems/HealthSyncSystem.cpp
-    # src/systems/NetworkSyncSystem.cpp
 )
 
 target_include_directories(rtype_server
