@@ -15,6 +15,7 @@ public:
     void AddClient(int client_id, std::shared_ptr<tcp::socket> socket);
     void RemoveClient(int client_id);
     void SendToAll(const Packet& packet);
+    void SendToAllExcept(const Packet& packet, int exclude_client_id);
     
     bool HasClient(int client_id) const;
     std::shared_ptr<tcp::socket> GetSocket(int client_id);

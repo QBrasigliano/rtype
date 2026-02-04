@@ -53,3 +53,5 @@ Serialize()             # convertir en bytes
 auto&                   # accès par référence
 auto&&                  # accès universel (référence ou valeur)
 
+Payload                   # données utiles dans un paquet, sans l'entête ni la checksum
+callback                  # fonction passée en argument pour être appelée plus tard
