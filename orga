@@ -26,7 +26,7 @@ Jour 2 : Protocole & Networking ✅
 
 ✅ 4.1 Client.hpp/cpp (CLIENT)
    ✅ Classe Client avec async_connect
-   ✅ Se connecter au serveur (127.0.0.1:12345)
+   ✅ Se connecter au serveur (127.0.0.1:4242)
    ✅ SendPacket() avec async_write
    ✅ Update() pour traiter événements ASIO
    ✅ Disconnect() propre

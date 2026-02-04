@@ -3,7 +3,7 @@
 #include <iostream>
 
 // envoie pos
-void SendMovementPacket(Client& client, InputType moveType) {
+void SendMovementPacket(Client& client, PacketType moveType) {
     Packet packet;
     packet.header = PACKET_HEADER;
     packet.size = 0;
@@ -39,13 +39,13 @@ void HandleInput(float& playerX, float& playerY, float playerRadius, float playe
     sendTimer += GetFrameTime();
     if (sendTimer >= sendInterval) {
         if (IsKeyDown(KEY_UP))
-            SendMovementPacket(client, InputType::MOVE_UP);
+            SendMovementPacket(client, PacketType::MOVE_UP);
         if (IsKeyDown(KEY_DOWN))
-            SendMovementPacket(client, InputType::MOVE_DOWN);
+            SendMovementPacket(client, PacketType::MOVE_DOWN);
         if (IsKeyDown(KEY_LEFT))
-            SendMovementPacket(client, InputType::MOVE_LEFT);
+            SendMovementPacket(client, PacketType::MOVE_LEFT);
         if (IsKeyDown(KEY_RIGHT))
-            SendMovementPacket(client, InputType::MOVE_RIGHT);
+            SendMovementPacket(client, PacketType::MOVE_RIGHT);
         sendTimer = 0.0f;
     }
 }
@@ -63,7 +63,7 @@ int main() {
     InitWindow(1024, 768, "R-Type");
     SetTargetFPS(60);
     
-    Client client("127.0.0.1", 12345);
+    Client client("127.0.0.1", 4242);
     client.Connect();
     
     float playerX = 512.0f;

@@ -85,7 +85,22 @@ void NetworkManager::ReadFromClient(std::shared_ptr<tcp::socket> socket, int cli
                             // Déserialiser le paquet
                             Packet packet;
                             if (Packet::Deserialize(complete_packet, packet)) {
-                                // Traiter le paquet du client
+                                // Afficher ce qu'on reçoit
+                                std::cout << "📨 Client ID: " << client_id << " - Type: " << static_cast<int>(packet.type) << std::endl;
+                                
+                                // Créer paquet broadcast
+                                Packet broadcast;
+                                broadcast.header = PACKET_HEADER;
+                                broadcast.size = 2;     // 2 bytes: client_id + move_type
+                                broadcast.type = PacketType::PLAYER_MOVED;
+                                broadcast.data = {
+                                    static_cast<uint8_t>(client_id),
+                                    static_cast<uint8_t>(packet.type)
+                                };
+                                broadcast.checksum = broadcast.CalculateChecksum();
+                                
+                                // Envoyer à TOUS les clients
+                                registry_.SendToAll(broadcast);
                             }
                             
                             // Relire le prochain paquet du même client

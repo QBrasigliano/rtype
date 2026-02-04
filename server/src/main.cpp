@@ -2,7 +2,7 @@
 #include <iostream>
 
 int main() {
-    NetworkManager manager(12345);  // Port 12345
+    NetworkManager manager(4242);  // Port 4242
     manager.Start();               // Démarrer
     
     std::cout << "Serveur en attente de clients..." << std::endl;

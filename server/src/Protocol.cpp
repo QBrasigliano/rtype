@@ -62,7 +62,7 @@ bool Packet::Deserialize(const std::vector<uint8_t>& bytes, Packet& packet) {
     offset += 2;
     
     // type (1 byte)
-    packet.type = static_cast<InputType>(bytes[offset]);
+    packet.type = static_cast<PacketType>(bytes[offset]);
     offset += 1;
     
     // données (packet.size bytes)
