@@ -2,27 +2,24 @@
 #include <iostream>
 
 void ClientRegistry::AddClient(int client_id, std::shared_ptr<tcp::socket> socket) {
-    clients_[client_id] = socket;
-    std::cout << "✅ Client ID: " << client_id << " ajouté au registre" << std::endl;
+    clients_[client_id] = socket;       // add client to map
 }
 
 void ClientRegistry::RemoveClient(int client_id) {
-    auto it = clients_.find(client_id);
+    auto it = clients_.find(client_id);     // find client
     if (it != clients_.end()) {
-        clients_.erase(it);
-        std::cout << "✅ Client ID: " << client_id << " supprimé du registre" << std::endl;
+        clients_.erase(it);                 // sup client de map
     }
 }
 
 void ClientRegistry::SendToAll(const Packet& packet) {
-    auto bytes = packet.Serialize();
+    auto bytes = packet.Serialize();                        // convert packet to bytes
     for (auto& [id, socket] : clients_) {
-        if (socket && socket->is_open()) {
-            socket->async_write_some(asio::buffer(bytes),
+        if (socket && socket->is_open()) {                  // check socket valid
+            socket->async_write_some(asio::buffer(bytes),       //send
                 [id](const asio::error_code& ec, std::size_t /*bytes_transferred*/) {
-                    if (ec) {
+                    if (ec)
                         std::cerr << "❌ Erreur envoi à client " << id << ": " << ec.message() << std::endl;
-                    }
                 });
         }
     }
@@ -33,9 +30,8 @@ bool ClientRegistry::HasClient(int client_id) const {
 }
 
 std::shared_ptr<tcp::socket> ClientRegistry::GetSocket(int client_id) {
-    auto it = clients_.find(client_id);
-    if (it != clients_.end()) {
-        return it->second;
-    }
+    auto it = clients_.find(client_id);         // find client
+    if (it != clients_.end())                   // if found
+        return it->second;                      // return socket
     return nullptr;
 }

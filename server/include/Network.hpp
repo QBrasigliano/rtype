@@ -4,7 +4,8 @@
 #include <asio.hpp>
 #include <vector>
 #include <memory>
-#include "../include/Protocol.hpp"
+#include "Protocol.hpp"
+#include "ClientRegistry.hpp"
 
 using asio::ip::tcp;
 
@@ -22,7 +23,10 @@ private:
     asio::io_context io_;
     std::unique_ptr<tcp::acceptor> acceptor_;
     uint16_t port_;
+    int next_client_id_;
+    ClientRegistry registry_;
     void AcceptNextClient();
+    void ReadFromClient(std::shared_ptr<tcp::socket> socket, int client_id);
 };
 
 #endif // NETWORK_HPP

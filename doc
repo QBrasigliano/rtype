@@ -47,3 +47,9 @@ tcp                        # protocole de communication fiable
 lambda                     # fonction sans nom, qu'on peut passer à d'autres fonctions
 poll_one                   # vérifie et traite une seule opération en attente
 mutable                    # permet de modifier des variables capturées par valeur dans une lambda (pas quz lire)
+
+async_write_some        # envoie des données sans bloquer
+Serialize()             # convertir en bytes
+auto&                   # accès par référence
+auto&&                  # accès universel (référence ou valeur)
+

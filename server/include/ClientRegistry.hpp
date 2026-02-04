@@ -20,5 +20,5 @@ public:
     std::shared_ptr<tcp::socket> GetSocket(int client_id);
     
 private:
-    std::map<int, std::shared_ptr<tcp::socket>> clients_;
+    std::map<int, std::shared_ptr<tcp::socket>> clients_;       // map client_id -> socket
 };

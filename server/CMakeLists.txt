@@ -2,6 +2,7 @@ add_executable(rtype_server
     src/main.cpp
     src/Protocol.cpp
     src/network.cpp
+    src/ClientRegistry.cpp
 )
 
 target_include_directories(rtype_server

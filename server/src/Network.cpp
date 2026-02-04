@@ -1,4 +1,5 @@
 #include "../include/Network.hpp"
+#include "../include/ClientRegistry.hpp"
 
 #include <iostream>
 
@@ -41,6 +42,7 @@ void NetworkManager::AcceptNextClient() {
                 
                 // cree shared_ptr pour socket
                 auto shared_socket = std::make_shared<tcp::socket>(std::move(*socket));
+                registry_.AddClient(client_id, shared_socket);
                 ReadFromClient(shared_socket, client_id);
             } else {
                 std::cerr << "Erreur connexion: " << error.message() << std::endl;
@@ -95,6 +97,7 @@ void NetworkManager::ReadFromClient(std::shared_ptr<tcp::socket> socket, int cli
                 // "End of file" = client déconnecté proprement
                 if (read_error == asio::error::eof) {
                     std::cout << "Client ID: " << client_id << " déconnecté" << std::endl;
+                    registry_.RemoveClient(client_id);
                 }
             }
         }
