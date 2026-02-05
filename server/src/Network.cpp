@@ -6,7 +6,7 @@
 
 // bullet struct
 struct Bullet {
-    float x, y
+    float x, y;
     float vx, vy;
     float lifetime;
     int owner_id;
@@ -79,7 +79,9 @@ void NetworkManager::ReadFromClient(std::shared_ptr<tcp::socket> socket, int cli
             // 📖 Vérifier si la lecture de l'en-tête du packet (4 bytes) s'est bien passée
             if (!read_error) {
                 // Vérifier le header (0xDEAD)
-                uint16_t header = (static_cast<uint16_t>((*header_buffer)[0]) << 8) | (*header_buffer)[1];                // 🔒 Vérifier que le packet commence bien par 0xDEAD (sécurité protocole)                if (header != PACKET_HEADER) {
+                uint16_t header = (static_cast<uint16_t>((*header_buffer)[0]) << 8) | (*header_buffer)[1];
+                // 🔒 Vérifier que le packet commence bien par 0xDEAD (sécurité protocole)
+                if (header != PACKET_HEADER) {
                     std::cout << "Bad header: 0x" << std::hex << header << " pour client " << client_id << std::endl;
                     return;
                 }
@@ -102,7 +104,8 @@ void NetworkManager::ReadFromClient(std::shared_ptr<tcp::socket> socket, int cli
                             
                             // deserialiser paquet
                             Packet packet;
-                                                        // ✅ Vérifier si le packet reçu est valide (checksum + structure correcte)                            if (Packet::Deserialize(complete_packet, packet)) {
+                            // ✅ Vérifier si le packet reçu est valide (checksum + structure correcte)
+                            if (Packet::Deserialize(complete_packet, packet)) {
                                 // traiter paquet selon type
                                 if (packet.type == PacketType::SHOOT) {
                                     std::cout << "Client " << client_id << " tire!" << std::endl;
