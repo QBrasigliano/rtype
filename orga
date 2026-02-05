@@ -39,123 +39,73 @@ Jour 2 : Protocole & Networking ✅
    ✅ Timer 100ms pour envoyer inputs au serveur
    ✅ Envoie MOVE_UP/DOWN/LEFT/RIGHT
 
-Jour 3 : En cours
-⏳ 3.3 ClientRegistry.hpp
-   ⏳ Gestion clients connectés sur serveur
-   ⏳ Mapping client ID ↔ socket
-   ⏳ Stockage des données joueur
-⏳ 3.4 GameLogic.hpp
-   ⏳ Entités (joueur, ennemis, bullets)
-   ⏳ Spawn/despawn logique
-   ⏳ Collision détection (AABB)
-⏳ 3.5 Server Main Loop
-   ⏳ Boucle serveur principale
-   ⏳ Coordonner NetworkManager + GameLogic
-   ⏳ Broadcast état du jeu aux clients
+Jour 3 : Multiplayer Networking ✅
+✅ 3.3 ClientRegistry.hpp/cpp
+   ✅ Gestion clients connectés sur serveur
+   ✅ Mapping client ID ↔ socket avec shared_ptr
+   ✅ SendToAll() + SendToAllExcept() pour broadcasts
+   ✅ AddClient() avec spawn broadcasting
+   ✅ RemoveClient() avec cleanup automatique
 
-Jour 4 : Engine - ECS Architecture
-⏳ 2.1 Entity.hpp/cpp
-   ⏳ Classe Entity (ID, liste components)
-   ⏳ GetComponent<T>() / AddComponent<T>()
-   ⏳ RemoveComponent<T>()
-⏳ 2.2 Component.hpp
-   ⏳ Classe abstraite Component
-   ⏳ Components: Position, Velocity, Sprite, Health
-⏳ 2.3 World.hpp/cpp
-   ⏳ Gestionnaire d entités
-   ⏳ Spawn/Destroy entités
-   ⏳ Gestion des systems
-⏳ 2.4 Engine.hpp/cpp
-   ⏳ Boucle de jeu (Input → Update → Render)
-   ⏳ Delta time
-   ⏳ Fenêtre Raylib
+✅ 3.4 Position Synchronization
+   ✅ Server reçoit paquets MOVE_* des clients
+   ✅ Server extrait positions absolues (X, Y)
+   ✅ Server broadcast PLAYER_MOVED à tous autres clients
+   ✅ Format paquet: client_id(1) + X(2) + Y(2) = 5 bytes
+   ✅ Big-endian encoding pour cross-platform
 
-Jour 4 : Client - Renderer & Input
-⏳ 4.1 RenderSystem.hpp/cpp
-   ⏳ Afficher les sprites
-   ⏳ Gestion caméra
-   ⏳ HUD basique (debug)
-⏳ 4.2 InputHandler.hpp/cpp
-   ⏳ Clavier/souris input
-   ⏳ Convertir en actions
-⏳ 4.3 Client.hpp/cpp
-   ⏳ Connexion au serveur
-   ⏳ Recevoir état du jeu
-   ⏳ Affichage synchronisé
-⏳ 4.4 UI Menu
-   ⏳ Écran de démarrage
-   ⏳ Sélection serveur
+✅ 3.5 Client Reception System
+   ✅ ReadServerMessage() avec async_read recursif
+   ✅ Désérialisation paquets PLAYER_MOVED
+   ✅ Callback system: SetOnPlayerMoved(callback)
+   ✅ Affichage autres joueurs en ROUGE (toi en BLEU)
+   ✅ Compteur joueurs connectés dynamique
 
-Jour 5 : Physique & Collisions
-⏳ 5.1 PhysicsSystem.hpp/cpp
-   ⏳ Mouvement (pos += vel * dt)
-   ⏳ Limite écran
-⏳ 5.2 CollisionSystem.hpp/cpp
-   ⏳ AABB collision detection
-   ⏳ Callback collisions
-⏳ 5.3 Player.hpp/cpp
-   ⏳ Classe joueur (hérité Entity)
-   ⏳ Déplacement (WASD)
-⏳ 5.4 Enemy.hpp/cpp
-   ⏳ Classe ennemi basique
-   ⏳ Mouvement simple
+✅ 3.6 Connection Management
+   ✅ Détection déconnexion server → fermeture auto client
+   ✅ Validation connexion avant lancement graphiques
+   ✅ Gestion erreurs robuste (Connection reset by peer)
+   ✅ Spawn synchronisé: tous joueurs à (100, 400)
 
-Jour 6 : Gameplay - Tir & Spawn
-⏳ 6.1 Bullet.hpp/cpp
-   ⏳ Classe projectile
-   ⏳ Destruction hors écran
-⏳ 6.2 EnemySpawner.hpp/cpp
-   ⏳ Spawn vagues d ennemis
-   ⏳ Gestion timing
-⏳ 6.3 Player Shoot
-   ⏳ Tir avec barre espace
-   ⏳ Cooldown
-⏳ 6.4 Destruction
-   ⏳ Collision bullet → ennemi
-   ⏳ Gestion mort ennemi
+✅ 3.7 Real-time Multiplayer
+   ✅ 60 FPS sync client-serveur
+   ✅ Mouvements temps réel sans lag
+   ✅ Broadcast filtering (pas de self-reception)
+   ✅ Position initiale broadcast au spawn
+   ✅ Test: ✅ 2+ clients se voient bouger en temps réel!
 
-Jour 7 : Polish & Assets
-⏳ 7.1 Sprites
-   ⏳ Charger assets/textures/
-   ⏳ Joueur, ennemis, bullets
-⏳ 7.2 Score & UI
-   ⏳ Affichage score
-   ⏳ Compteur vies
-⏳ 7.3 Sounds (optionnel)
-   ⏳ Charger assets/sounds/
-   ⏳ Tir, explosion
-⏳ 7.4 Game Over
-   ⏳ Écran fin de partie
+Jour 4 : Gameplay Core 
+✅ 4.1 Tir/Projectiles - COMPLET
+   ✅ SHOOT packet type + handling  
+   ✅ Bullet entity avec lifetime et position/vélocité
+   ✅ Broadcast tirs aux autres clients (BULLET_SPAWNED)
+   ✅ Affichage projectiles synchronisé (cercles jaunes)
+   ✅ Mouvement bullets temps réel (300px/s vers droite)
+   ✅ Suppression bullets hors écran/expirées  
+   ✅ Système complet client-serveur fonctionnel
+   ✅ Commentaires explicatifs sur tous les if statements
+   ✅ Test: ✅ Tir avec ESPACE = bullets volent vers la droite!
 
-Jour 8 : Testing & Debug
-⏳ 8.1 Tests unitaires
-   ⏳ Protocol tests
-   ⏳ Collision tests
-⏳ 8.2 Debug réseau
-   ⏳ Vérifier paquets
-   ⏳ Latence
-⏳ 8.3 Performance
-   ⏳ Profiler
-   ⏳ Optimisations
-⏳ 8.4 Bugfix
-   ⏳ Fixer issues critiques
-   ⏳ Polish gameplay
+Jour 5 : ECS
+- Entity.hpp + World.hpp
+- PositionComponent, VelocityComponent
+- Migration Player + Bullets vers ECS
+- RenderSystem simple (cercles)
 
+Jour 6 : Ennemis + Mouvement
+- EnemyComponent 
+- ENEMY_SPAWNED packet type
+- Spawn ennemis côté serveur (cercles rouges)
+- Mouvement droit (gauche→droite)
+- Networking ennemis
 
-Reception des inputs joueur
-Ou : Garder tout en single-player si trop complexe
-Objectif : Multi-joueur OU single-player stable
+Jour 7 : Collisions + Gameplay
+- CollisionSystem (bullets vs ennemis)
+- Destruction entities sur collision
+- Score basique (+10 par ennemi tué)
+- Game Over si joueur touché
 
-Jour 9 : Polish & Assets
-Sprites/couleurs pour joueur, ennemis, bullets
-SFX/musique (simple)
-Menu simple (Start/Quit)
-Écran Game Over
-Objectif : Jeu "fini" visuellement
-
-Jour 10 : Tests & Bugfix
-Tester tout le gameplay
-Fixer bugs critiques
-Optimisations si besoin
-Nettoyage code
-Objectif : Jeu fonctionnel et stable
+Jour 8 : Polish Final
+- Affichage score/vies
+- Nettoyage code
+- Test final complet

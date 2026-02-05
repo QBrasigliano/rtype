@@ -8,7 +8,7 @@ int main() {
     std::cout << "Serveur en attente de clients..." << std::endl;
     
     // Boucle principale
-   while (true) {
+    while (true) {
         manager.Update();  // Traiter les événements
         // Ajouter d'autres trucs du serveur ici
     }

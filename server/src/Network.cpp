@@ -2,6 +2,20 @@
 #include "../include/ClientRegistry.hpp"
 
 #include <iostream>
+#include <vector>
+
+// bullet struct
+struct Bullet {
+    float x, y
+    float vx, vy;
+    float lifetime;
+    int owner_id;
+    int bullet_id;
+};
+
+// Variables bullet temporaire
+std::vector<Bullet> bullets;
+int next_bullet_id = 1;
 
 NetworkManager::NetworkManager(uint16_t port) 
     : port_(port), next_client_id_(1) {
@@ -27,6 +41,7 @@ void NetworkManager::Start() {
 }
 
 void NetworkManager::AcceptNextClient() {
+    // 🔍 Vérifier si l'accepteur TCP est initialisé et ouvert pour accepter des connexions
     if (!acceptor_ || !acceptor_->is_open())
         return;
     
@@ -36,6 +51,7 @@ void NetworkManager::AcceptNextClient() {
     // async_accept -> quand un client se connecte, appel lambda
     acceptor_->async_accept(*socket, 
         [this, socket = std::move(socket)](const asio::error_code& error) mutable {
+            // ✅ Vérifier si la connexion du client s'est bien passée (pas d'erreur ASIO)
             if (!error) {
                 int client_id = next_client_id_++;
                 std::cout << "Client ID: " << client_id << " connecté" << std::endl;
@@ -54,85 +70,141 @@ void NetworkManager::AcceptNextClient() {
 }
 
 void NetworkManager::ReadFromClient(std::shared_ptr<tcp::socket> socket, int client_id) {
-    // Créer un buffer pour lire l'en-tête du paquet (header + size = 4 bytes)
+    // nouveau buffer pour lire l entete
     auto header_buffer = std::make_shared<std::vector<uint8_t>>(4);
     
-    // Lecture asynchrone de l'en-tête
+    // lecture ce celle la 
     asio::async_read(*socket, asio::buffer(*header_buffer),
         [this, socket, header_buffer, client_id](const asio::error_code& read_error, std::size_t bytes_read) mutable {
+            // 📖 Vérifier si la lecture de l'en-tête du packet (4 bytes) s'est bien passée
             if (!read_error) {
-                // Vérifier le magic header (0xDEAD)
-                uint16_t header = (static_cast<uint16_t>((*header_buffer)[0]) << 8) | (*header_buffer)[1];
-                if (header != PACKET_HEADER) {
-                    std::cout << "❌ Bad header: 0x" << std::hex << header << " pour client " << client_id << std::endl;
+                // Vérifier le header (0xDEAD)
+                uint16_t header = (static_cast<uint16_t>((*header_buffer)[0]) << 8) | (*header_buffer)[1];                // 🔒 Vérifier que le packet commence bien par 0xDEAD (sécurité protocole)                if (header != PACKET_HEADER) {
+                    std::cout << "Bad header: 0x" << std::hex << header << " pour client " << client_id << std::endl;
                     return;
                 }
                 
                 // Lire la taille du payload
                 uint16_t payload_size = (static_cast<uint16_t>((*header_buffer)[2]) << 8) | (*header_buffer)[3];
                 
-                // Créer un buffer pour le reste : type(1) + data(payload_size) + checksum(2)
+                // nouveau buffer pour le reste : type(1) + data(payload_size) + checksum(2)
                 auto payload_buffer = std::make_shared<std::vector<uint8_t>>(1 + payload_size + 2);
                 
                 // Lire le payload
                 asio::async_read(*socket, asio::buffer(*payload_buffer),
                     [this, socket, header_buffer, payload_buffer, client_id](const asio::error_code& payload_error, std::size_t payload_bytes) mutable {
+                        // 📦 Vérifier si la lecture du contenu du packet (data + checksum) s'est bien passée
                         if (!payload_error) {
-                            // Reconstruire le paquet complet
+                            // Reconstruire le full packet
                             std::vector<uint8_t> complete_packet;
                             complete_packet.insert(complete_packet.end(), header_buffer->begin(), header_buffer->end());
                             complete_packet.insert(complete_packet.end(), payload_buffer->begin(), payload_buffer->end());
                             
-                            // Déserialiser le paquet
+                            // deserialiser paquet
                             Packet packet;
-                            
-                            if (Packet::Deserialize(complete_packet, packet)) {
-                                
-                                // Créer paquet broadcast avec position
-                                Packet broadcast;
-                                broadcast.header = PACKET_HEADER;
-                                broadcast.size = 5;  // client_id(1) + X(2) + Y(2) - pas de type
-                                broadcast.type = PacketType::PLAYER_MOVED;
-                                
-                                // Extraire position depuis les données du client
-                                uint16_t playerX = 0, playerY = 0;
-                                if (packet.data.size() >= 4) {
-                                    playerX = (static_cast<uint16_t>(packet.data[0]) << 8) | packet.data[1];
-                                    playerY = (static_cast<uint16_t>(packet.data[2]) << 8) | packet.data[3];
+                                                        // ✅ Vérifier si le packet reçu est valide (checksum + structure correcte)                            if (Packet::Deserialize(complete_packet, packet)) {
+                                // traiter paquet selon type
+                                if (packet.type == PacketType::SHOOT) {
+                                    std::cout << "Client " << client_id << " tire!" << std::endl;
+                                    
+                                    // pos tir
+                                    uint16_t shootX = 0, shootY = 0;
+                                    // 📏 Vérifier que le packet contient bien les coordonnées X,Y (4 bytes minimum)
+                                    if (packet.data.size() >= 4) {
+                                        shootX = (static_cast<uint16_t>(packet.data[0]) << 8) | packet.data[1];
+                                        shootY = (static_cast<uint16_t>(packet.data[2]) << 8) | packet.data[3];
+                                    }
+                                    
+                                    // new bullet
+                                    Bullet newBullet;
+                                    newBullet.x = static_cast<float>(shootX);
+                                    newBullet.y = static_cast<float>(shootY);
+                                    newBullet.vx = 300.0f;
+                                    newBullet.vy = 0.0f;
+                                    newBullet.lifetime = 3.0f;
+                                    newBullet.owner_id = client_id;
+                                    newBullet.bullet_id = next_bullet_id++;
+                                    
+                                    bullets.push_back(newBullet);
+                                    
+                                    // Broadcaster bullet aux vlients
+                                    Packet bulletBroadcast;
+                                    bulletBroadcast.header = PACKET_HEADER;
+                                    bulletBroadcast.size = 9;  // bullet_id(1) + x(2) + y(2) + vx(2) + vy(2)
+                                    bulletBroadcast.type = PacketType::BULLET_SPAWNED;
+                                    
+                                    uint16_t encoded_x = static_cast<uint16_t>(newBullet.x);
+                                    uint16_t encoded_y = static_cast<uint16_t>(newBullet.y);
+                                    uint16_t encoded_vx = static_cast<uint16_t>(newBullet.vx);
+                                    uint16_t encoded_vy = static_cast<uint16_t>(newBullet.vy + 32768); // Offset pour valeurs négatives
+                                    
+                                    bulletBroadcast.data = {
+                                        static_cast<uint8_t>(newBullet.bullet_id),
+                                        static_cast<uint8_t>((encoded_x >> 8) & 0xFF),
+                                        static_cast<uint8_t>(encoded_x & 0xFF),
+                                        static_cast<uint8_t>((encoded_y >> 8) & 0xFF),
+                                        static_cast<uint8_t>(encoded_y & 0xFF),
+                                        static_cast<uint8_t>((encoded_vx >> 8) & 0xFF),
+                                        static_cast<uint8_t>(encoded_vx & 0xFF),
+                                        static_cast<uint8_t>((encoded_vy >> 8) & 0xFF),
+                                        static_cast<uint8_t>(encoded_vy & 0xFF)
+                                    };
+                                    bulletBroadcast.checksum = bulletBroadcast.CalculateChecksum();
+                                    
+                                    registry_.SendToAll(bulletBroadcast);
+                                    
+                                    std::cout << "   Bullet créée: ID=" << newBullet.bullet_id 
+                                              << " pos=(" << newBullet.x << "," << newBullet.y 
+                                              << ") vel=(" << newBullet.vx << "," << newBullet.vy << ")" << std::endl;
+                                    
+                                } else {
+                                    // new broadcast packet with position
+                                    Packet broadcast;
+                                    broadcast.header = PACKET_HEADER;
+                                    broadcast.size = 5;  // client_id(1) + X(2) + Y(2) - no type
+                                    broadcast.type = PacketType::PLAYER_MOVED;
+                                    
+                                    // pos client
+                                    uint16_t playerX = 0, playerY = 0;
+                                    // 📏 Vérifier que le packet contient bien les coordonnées X,Y du joueur (4 bytes minimum)
+                                    if (packet.data.size() >= 4) {
+                                        playerX = (static_cast<uint16_t>(packet.data[0]) << 8) | packet.data[1];
+                                        playerY = (static_cast<uint16_t>(packet.data[2]) << 8) | packet.data[3];
+                                    }
+                                    
+                                    // Créer le broadcast avec position absolue - SANS type à la fin
+                                    broadcast.data = {
+                                        static_cast<uint8_t>(client_id),
+                                        static_cast<uint8_t>((playerX >> 8) & 0xFF),
+                                        static_cast<uint8_t>(playerX & 0xFF),
+                                        static_cast<uint8_t>((playerY >> 8) & 0xFF),
+                                        static_cast<uint8_t>(playerY & 0xFF)
+                                    };
+                                    broadcast.checksum = broadcast.CalculateChecksum();
+                                    
+                                    // envoyer à tout les autre clients 
+                                    registry_.SendToAllExcept(broadcast, client_id);
                                 }
-                                
-                                // Créer le broadcast avec position absolue - SANS type à la fin
-                                broadcast.data = {
-                                    static_cast<uint8_t>(client_id),
-                                    static_cast<uint8_t>((playerX >> 8) & 0xFF),
-                                    static_cast<uint8_t>(playerX & 0xFF),
-                                    static_cast<uint8_t>((playerY >> 8) & 0xFF),
-                                    static_cast<uint8_t>(playerY & 0xFF)
-                                };
-                                broadcast.checksum = broadcast.CalculateChecksum();
-                                
-                                // Envoyer à TOUS les clients SAUF l'expéditeur
-                                registry_.SendToAllExcept(broadcast, client_id);
                             } else {
-                                std::cout << "❌ Erreur déserialisation pour client " << client_id << " - ARRÊT de la lecture (désynchronisation)" << std::endl;
-                                // NE PAS relancer ReadFromClient car le stream est désynchronisé !
+                                std::cout << "Erreur déserialisation pour client " << client_id << " - ARRÊT de la lecture (désynchronisation)" << std::endl;
                                 return;
                             }
                             
                             // Relire le prochain paquet du même client
                             ReadFromClient(socket, client_id);
                         } else {
-                            std::cout << "❌ Erreur lecture payload pour client " << client_id << ": " << payload_error.message() << std::endl;
+                            std::cout << "Erreur lecture payload pour client " << client_id << ": " << payload_error.message() << std::endl;
                         }
                     }
                 );
             } else {
+                // 🔌 Distinguer les types d'erreurs de lecture
                 // "End of file" = client déconnecté proprement
                 if (read_error == asio::error::eof) {
                     std::cout << "Client ID: " << client_id << " déconnecté" << std::endl;
                     registry_.RemoveClient(client_id);
                 } else {
-                    std::cout << "❌ Erreur lecture header pour client " << client_id << ": " << read_error.message() << std::endl;
+                    std::cout << "Erreur lecture header pour client " << client_id << ": " << read_error.message() << std::endl;
                 }
             }
         }
@@ -140,6 +212,7 @@ void NetworkManager::ReadFromClient(std::shared_ptr<tcp::socket> socket, int cli
 }
 
 void NetworkManager::Stop() {
+    // 🛑 Vérifier si l'accepteur existe avant de le fermer (éviter crash)
     if (acceptor_)
         acceptor_->close();
     io_.stop();

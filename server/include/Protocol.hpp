@@ -20,6 +20,7 @@ enum class PacketType : uint8_t {
     SHOOT = 0x05,
     // Broadcast serveur
     PLAYER_MOVED = 0x0A,
+    BULLET_SPAWNED = 0x0C,
     GAME_STATE = 0x0B,
 };
 

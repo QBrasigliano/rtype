@@ -9,6 +9,15 @@
 
 using asio::ip::tcp;
 
+// bal
+struct Bullet {
+    float x, y;
+    float vx, vy;
+    float lifetime;
+    int owner_id;
+    int bullet_id;
+};
+
 class Client {
 public:
     Client(const std::string& ip, uint16_t port);
@@ -22,7 +31,10 @@ public:
     bool IsConnected() const { return is_connected_; }
     
     // Callback quand l'autre joueur bouge
-    void SetOnPlayerMoved(std::function<void(int, float, float)> callback);         // pas PacketType mais plus ciblé
+    void SetOnPlayerMoved(std::function<void(int, float, float)> callback);     // pas PacketType mais plus ciblé
+    
+    // Callback quand une bullet est créée
+    void SetOnBulletSpawned(std::function<void(Bullet)> callback);
     
 private:
     asio::io_context io_;
@@ -31,6 +43,7 @@ private:
     uint16_t port_;
     bool is_connected_ = false;
     std::function<void(int, float, float)> on_player_moved_;
+    std::function<void(Bullet)> on_bullet_spawned_;
     
     void ReadServerMessage();
 };
