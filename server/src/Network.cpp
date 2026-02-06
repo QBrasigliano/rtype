@@ -1,21 +1,16 @@
 #include "../include/Network.hpp"
 #include "../include/ClientRegistry.hpp"
+#include "Component.hpp"
+#include "Entity.hpp"
+#include "World.hpp"
+#include "Components/Position.hpp"
+#include "Components/Velocity.hpp"
+#include "Components/Bullet.hpp"
+#include "Systems/PhysicsSystem.hpp"
 
 #include <iostream>
 #include <vector>
 
-// bullet struct
-struct Bullet {
-    float x, y;
-    float vx, vy;
-    float lifetime;
-    int owner_id;
-    int bullet_id;
-};
-
-// Variables bullet temporaire
-std::vector<Bullet> bullets;
-int next_bullet_id = 1;
 
 NetworkManager::NetworkManager(uint16_t port) 
     : port_(port), next_client_id_(1) {
@@ -118,31 +113,28 @@ void NetworkManager::ReadFromClient(std::shared_ptr<tcp::socket> socket, int cli
                                         shootY = (static_cast<uint16_t>(packet.data[2]) << 8) | packet.data[3];
                                     }
                                     
-                                    // new bullet
-                                    Bullet newBullet;
-                                    newBullet.x = static_cast<float>(shootX);
-                                    newBullet.y = static_cast<float>(shootY);
-                                    newBullet.vx = 300.0f;
-                                    newBullet.vy = 0.0f;
-                                    newBullet.lifetime = 3.0f;
-                                    newBullet.owner_id = client_id;
-                                    newBullet.bullet_id = next_bullet_id++;
+                                    // Create bullet entity in ECS
+                                    auto bulletEntity = world_.CreateEntity();
+                                    bulletEntity->AddComponent<Position>(static_cast<float>(shootX), static_cast<float>(shootY));
+                                    bulletEntity->AddComponent<Velocity>(300.0f, 0.0f);
+                                    bulletEntity->AddComponent<BulletComponent>(next_bullet_id_, client_id, 3.0f);
                                     
-                                    bullets.push_back(newBullet);
+                                    int bullet_id = next_bullet_id_;
+                                    next_bullet_id_++;
                                     
-                                    // Broadcaster bullet aux vlients
+                                    // Broadcaster bullet aux clients
                                     Packet bulletBroadcast;
                                     bulletBroadcast.header = PACKET_HEADER;
                                     bulletBroadcast.size = 9;  // bullet_id(1) + x(2) + y(2) + vx(2) + vy(2)
                                     bulletBroadcast.type = PacketType::BULLET_SPAWNED;
                                     
-                                    uint16_t encoded_x = static_cast<uint16_t>(newBullet.x);
-                                    uint16_t encoded_y = static_cast<uint16_t>(newBullet.y);
-                                    uint16_t encoded_vx = static_cast<uint16_t>(newBullet.vx);
-                                    uint16_t encoded_vy = static_cast<uint16_t>(newBullet.vy + 32768); // Offset pour valeurs négatives
+                                    uint16_t encoded_x = shootX;
+                                    uint16_t encoded_y = shootY;
+                                    uint16_t encoded_vx = 300;
+                                    uint16_t encoded_vy = static_cast<uint16_t>(0 + 32768); // Offset pour valeurs négatives
                                     
                                     bulletBroadcast.data = {
-                                        static_cast<uint8_t>(newBullet.bullet_id),
+                                        static_cast<uint8_t>(bullet_id),
                                         static_cast<uint8_t>((encoded_x >> 8) & 0xFF),
                                         static_cast<uint8_t>(encoded_x & 0xFF),
                                         static_cast<uint8_t>((encoded_y >> 8) & 0xFF),
@@ -156,9 +148,9 @@ void NetworkManager::ReadFromClient(std::shared_ptr<tcp::socket> socket, int cli
                                     
                                     registry_.SendToAll(bulletBroadcast);
                                     
-                                    std::cout << "   Bullet créée: ID=" << newBullet.bullet_id 
-                                              << " pos=(" << newBullet.x << "," << newBullet.y 
-                                              << ") vel=(" << newBullet.vx << "," << newBullet.vy << ")" << std::endl;
+                                    std::cout << "   Bullet créée: ID=" << bullet_id 
+                                              << " pos=(" << shootX << "," << shootY 
+                                              << ") vel=(300,0)" << std::endl;
                                     
                                 } else {
                                     // new broadcast packet with position
@@ -224,6 +216,7 @@ void NetworkManager::Stop() {
 // notif client
 void NetworkManager::Update() {
     io_.poll();  // Traiter TOUS les événements ASIO en attente
+    PhysicsSystem::Update(world_, 0.016f);  // Update avec deltaTime ~60fps
 }
 
 void NetworkManager::SendToClient(int clientId, const Packet& packet) {

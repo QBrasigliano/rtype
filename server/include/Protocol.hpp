@@ -22,6 +22,8 @@ enum class PacketType : uint8_t {
     PLAYER_MOVED = 0x0A,
     BULLET_SPAWNED = 0x0C,
     GAME_STATE = 0x0B,
+    ENEMY_SPAWNED = 0x0D,
+    ENEMY_DESTROYED = 0x0E,
 };
 
 struct Packet {

@@ -35,6 +35,7 @@ public:
     
     // Callback quand une bullet est créée
     void SetOnBulletSpawned(std::function<void(Bullet)> callback);
+    void SetOnEnemySpawned(std::function<void(int, float, float, float, float)> callback);
     
 private:
     asio::io_context io_;
@@ -44,6 +45,7 @@ private:
     bool is_connected_ = false;
     std::function<void(int, float, float)> on_player_moved_;
     std::function<void(Bullet)> on_bullet_spawned_;
+    std::function<void(int, float, float, float, float)> on_enemy_spawned_;
     
     void ReadServerMessage();
 };

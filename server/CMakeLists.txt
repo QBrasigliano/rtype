@@ -7,6 +7,7 @@ add_executable(rtype_server
 
 target_include_directories(rtype_server
     PRIVATE include
+    PRIVATE ${CMAKE_SOURCE_DIR}/engine/include
 )
 
 find_package(asio REQUIRED)
@@ -19,4 +20,3 @@ target_link_libraries(rtype_server
 target_compile_features(rtype_server PRIVATE cxx_std_20)
 
 configure_file(${CMAKE_SOURCE_DIR}/server/.config ${CMAKE_BINARY_DIR}/.config COPYONLY)
-

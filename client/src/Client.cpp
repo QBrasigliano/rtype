@@ -150,6 +150,23 @@ void Client::ReadServerMessage() {
                                     if (on_bullet_spawned_)
                                         on_bullet_spawned_(bullet);
                                 }
+                                // if ENEMY_SPAWNED - format: enemy_id(1) + x(2) + y(2) + vx(2) + vy(2) = 9 bytes
+                                else if (packet.type == PacketType::ENEMY_SPAWNED && packet.data.size() >= 9) {
+                                    int enemy_id = packet.data[0];
+                                    uint16_t x = (static_cast<uint16_t>(packet.data[1]) << 8) | packet.data[2];
+                                    uint16_t y = (static_cast<uint16_t>(packet.data[3]) << 8) | packet.data[4];
+                                    uint16_t vx = (static_cast<uint16_t>(packet.data[5]) << 8) | packet.data[6];
+                                    uint16_t vy = (static_cast<uint16_t>(packet.data[7]) << 8) | packet.data[8];
+                                    
+                                    float fx = static_cast<float>(x);
+                                    float fy = static_cast<float>(y);
+                                    float fvx = static_cast<float>(vx);
+                                    float fvy = static_cast<float>(vy) - 32768;
+                                    
+                                    // 🗒 Vérifier si un callback a été défini pour les spawns d'ennemis
+                                    if (on_enemy_spawned_)
+                                        on_enemy_spawned_(enemy_id, fx, fy, fvx, fvy);
+                                }
                             }
                             ReadServerMessage();
                         } else {
@@ -170,4 +187,8 @@ void Client::ReadServerMessage() {
 
 void Client::SetOnBulletSpawned(std::function<void(Bullet)> callback) {
     on_bullet_spawned_ = callback;
+}
+
+void Client::SetOnEnemySpawned(std::function<void(int, float, float, float, float)> callback) {
+    on_enemy_spawned_ = callback;
 }

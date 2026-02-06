@@ -1,5 +1,6 @@
 add_library(engine
     main.cpp
+    Entity.cpp
 )
 
 target_include_directories(engine PUBLIC ../include)
