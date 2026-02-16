@@ -1,5 +1,11 @@
 #include <raylib.h>
 #include "Client.hpp"
+#include "World.hpp"
+#include "Components/Position.hpp"
+#include "Components/Velocity.hpp"
+#include "Components/Color.hpp"
+#include "Systems/RenderSystem.hpp"
+#include "Systems/PhysicsSystem.hpp"
 #include <iostream>
 #include <map>
 #include <thread>
@@ -7,14 +13,44 @@
 #include <vector>
 #include <algorithm>
 
-// envoie pos + input
+// Component pour identifier le joueur local
+class LocalPlayerComponent : public Component {};
+
+// Component pour identifier les autres joueurs
+class RemotePlayerComponent : public Component {
+public:
+    int client_id;
+    RemotePlayerComponent(int id) : client_id(id) {}
+};
+
+// Component pour les balles
+class BulletComponent : public Component {
+public:
+    int bullet_id;
+    float lifetime;
+    BulletComponent(int id, float lt) : bullet_id(id), lifetime(lt) {}
+};
+
+// Component pour les ennemis
+class LocalEnemyComponent : public Component {
+public:
+    int enemy_id;
+    LocalEnemyComponent(int id) : enemy_id(id) {}
+};
+
+// Component pour les limites d'écran
+class ScreenBoundsComponent : public Component {
+public:
+    float radius;
+    ScreenBoundsComponent(float r) : radius(r) {}
+};
+
 void SendMovementPacket(Client& client, PacketType moveType, float playerX, float playerY) {
     Packet packet;
     packet.header = PACKET_HEADER;
-    packet.size = 4;  // 4 bytes position X(2) + Y(2) - le type n'est PAS dans data !
+    packet.size = 4;
     packet.type = moveType;
     
-    // Encoder position: X(2 bytes) + Y(2 bytes)
     uint16_t x = static_cast<uint16_t>(playerX);
     uint16_t y = static_cast<uint16_t>(playerY);
     
@@ -29,14 +65,12 @@ void SendMovementPacket(Client& client, PacketType moveType, float playerX, floa
     client.SendPacket(packet);
 }
 
-// tir
 void SendShootPacket(Client& client, float playerX, float playerY) {
     Packet packet;
     packet.header = PACKET_HEADER;
-    packet.size = 4;  // 4 bytes position X(2) + Y(2) 
+    packet.size = 4;
     packet.type = PacketType::SHOOT;
     
-    // Encoder position du tir: X(2 bytes) + Y(2 bytes)
     uint16_t x = static_cast<uint16_t>(playerX);
     uint16_t y = static_cast<uint16_t>(playerY);
     
@@ -51,98 +85,82 @@ void SendShootPacket(Client& client, float playerX, float playerY) {
     client.SendPacket(packet);
 }
 
-// control
-void HandleInput(float& playerX, float& playerY, float playerRadius, float playerSpeed,
-                 Client& client) {
-    // joueur
-    // ⬆️ Vérifier si la flèche HAUT est pressée pour monter
+void HandleInput(World& world, Client& client) {
+    // Trouver le joueur local
+    auto localPlayer = world.GetEntity(0); // Le joueur local a ID 0
+    if (!localPlayer || !localPlayer->HasComponent<Position>())
+        return;
+    
+    Position& playerPos = localPlayer->GetComponent<Position>();
+    ScreenBoundsComponent& bounds = localPlayer->GetComponent<ScreenBoundsComponent>();
+    float playerSpeed = 5.0f;
+    
+    // Déplacement
     if (IsKeyDown(KEY_UP))
-        playerY -= playerSpeed;
-    // ⬇️ Vérifier si la flèche BAS est pressée pour descendre
+        playerPos.y -= playerSpeed;
     if (IsKeyDown(KEY_DOWN))
-        playerY += playerSpeed;
-    // ⬅️ Vérifier si la flèche GAUCHE est pressée pour aller à gauche
+        playerPos.y += playerSpeed;
     if (IsKeyDown(KEY_LEFT))
-        playerX -= playerSpeed;
-    // ➡️ Vérifier si la flèche DROITE est pressée pour aller à droite
+        playerPos.x -= playerSpeed;
     if (IsKeyDown(KEY_RIGHT))
-        playerX += playerSpeed;
+        playerPos.x += playerSpeed;
     
-    // terrain
-    // 🛡️ Vérifier si le joueur sort par la gauche de l'écran
-    if (playerX - playerRadius < 0)
-        playerX = playerRadius;
-    // 🛡️ Vérifier si le joueur sort par la droite de l'écran (1024px de large)
-    if (playerX + playerRadius > 1024)
-        playerX = 1024 - playerRadius;
-    // 🛡️ Vérifier si le joueur sort par le haut de l'écran
-    if (playerY - playerRadius < 0)
-        playerY = playerRadius;
-    // 🛡️ Vérifier si le joueur sort par le bas de l'écran (768px de haut)
-    if (playerY + playerRadius > 768)
-        playerY = 768 - playerRadius;
+    // Limites écran
+    if (playerPos.x - bounds.radius < 0)
+        playerPos.x = bounds.radius;
+    if (playerPos.x + bounds.radius > 1024)
+        playerPos.x = 1024 - bounds.radius;
+    if (playerPos.y - bounds.radius < 0)
+        playerPos.y = bounds.radius;
+    if (playerPos.y + bounds.radius > 768)
+        playerPos.y = 768 - bounds.radius;
     
-    // position - envoyer CHAQUE FRAME (pas toutes les 100ms)
-    // 📤 Envoyer position au serveur si flèche HAUT pressée
+    // Envoyer position au serveur
     if (IsKeyDown(KEY_UP))
-        SendMovementPacket(client, PacketType::MOVE_UP, playerX, playerY);
-    // 📤 Envoyer position au serveur si flèche BAS pressée
+        SendMovementPacket(client, PacketType::MOVE_UP, playerPos.x, playerPos.y);
     if (IsKeyDown(KEY_DOWN))
-        SendMovementPacket(client, PacketType::MOVE_DOWN, playerX, playerY);
-    // 📤 Envoyer position au serveur si flèche GAUCHE pressée
+        SendMovementPacket(client, PacketType::MOVE_DOWN, playerPos.x, playerPos.y);
     if (IsKeyDown(KEY_LEFT))
-        SendMovementPacket(client, PacketType::MOVE_LEFT, playerX, playerY);
-    // 📤 Envoyer position au serveur si flèche DROITE pressée
+        SendMovementPacket(client, PacketType::MOVE_LEFT, playerPos.x, playerPos.y);
     if (IsKeyDown(KEY_RIGHT))
-        SendMovementPacket(client, PacketType::MOVE_RIGHT, playerX, playerY);
+        SendMovementPacket(client, PacketType::MOVE_RIGHT, playerPos.x, playerPos.y);
     
-    // tir
-    // 🔥 Vérifier si la barre ESPACE est pressée pour tirer (IsKeyPressed = une seule fois par appui)
+    // Tir
     if (IsKeyPressed(KEY_SPACE))
-        SendShootPacket(client, playerX, playerY);
+        SendShootPacket(client, playerPos.x, playerPos.y);
 }
 
-// affichage
-void Render(float playerX, float playerY, float playerRadius, std::map<int, std::pair<float, float>>& otherPlayers, std::vector<Bullet>& bullets) {
-    BeginDrawing();
-    ClearBackground(BLACK);
-    
-    // Afficher le compteur de joueurs connectés : toi + autres joueurs
-    int totalPlayers = 1 + static_cast<int>(otherPlayers.size());
-    std::string playerCount = "Joueurs connectés: " + std::to_string(totalPlayers);
-    DrawText(playerCount.c_str(), 10, 10, 20, WHITE);
-    
-    // Afficher les bullets
-    for (auto& bullet : bullets)
-        DrawCircle((int)bullet.x, (int)bullet.y, 3, YELLOW);
-    
-    // Afficher les autres joueurs
-    for (auto& [id, pos] : otherPlayers)
-        DrawCircle((int)pos.first, (int)pos.second, playerRadius, RED);
-    
-    // Afficher le joueur local
-    DrawCircle((int)playerX, (int)playerY, playerRadius, BLUE);
-    EndDrawing();
-}
-
-// mise à jour des bullets
-void UpdateBullets(std::vector<Bullet>& bullets, float deltaTime) {
-    // pos bullet
-    for (auto& bullet : bullets) {
-        bullet.x += bullet.vx * deltaTime;
-        bullet.y += bullet.vy * deltaTime;
-        bullet.lifetime -= deltaTime;
+void RenderUI(const World& world) {
+    // Compter les joueurs
+    int playerCount = 0;
+    for (const auto& entity : world.GetEntities()) {
+        if (entity->HasComponent<LocalPlayerComponent>() || entity->HasComponent<RemotePlayerComponent>())
+            playerCount++;
     }
     
-    // hors ecran
-    bullets.erase(
-        std::remove_if(bullets.begin(), bullets.end(), [](const Bullet& bullet) {
-            return bullet.x > 1024 || bullet.x < 0 || 
-                   bullet.y > 768 || bullet.y < 0 || 
-                   bullet.lifetime <= 0;
-        }),
-        bullets.end()
-    );
+    std::string playerCountStr = "Joueurs connectés: " + std::to_string(playerCount);
+    DrawText(playerCountStr.c_str(), 10, 10, 20, WHITE);
+}
+
+void UpdateBulletsLifetime(World& world, float deltaTime) {
+    std::vector<uint32_t> bulletsToRemove;
+    
+    for (const auto& entity : world.GetEntities()) {
+        if (entity->HasComponent<BulletComponent>()) {
+            BulletComponent& bullet = entity->GetComponent<BulletComponent>();
+            bullet.lifetime -= deltaTime;
+            
+            // Vérifier positions hors écran
+            if (entity->HasComponent<Position>()) {
+                Position& pos = entity->GetComponent<Position>();
+                if (pos.x > 1024 || pos.x < 0 || pos.y > 768 || pos.y < 0 || bullet.lifetime <= 0)
+                    bulletsToRemove.push_back(entity->GetId());
+            }
+        }
+    }
+    
+    for (uint32_t id : bulletsToRemove)
+        world.RemoveEntity(id);
 }
 
 int main() {
@@ -151,77 +169,84 @@ int main() {
     std::cout << "Connexion au serveur..." << std::endl;
     client.Connect();
     
-    // timout de co 
     int retries = 0;
-    // ⏳ Boucler tant qu'on n'est PAS connecté ET qu'on n'a pas atteint le timeout
-    while (!client.IsConnected() && retries < 10) {  // 1 secondes max
+    while (!client.IsConnected() && retries < 10) {
         client.Update();
         retries++;
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     
-    // si pas co, quitter 
-    // ❌ Vérifier si on n'a toujours pas réussi à se connecter après le timeout
     if (!client.IsConnected()) {
         std::cerr << "IMPOSSIBLE DE SE CONNECTER AU SERVEUR !" << std::endl;
-        std::cerr << "Vérifiez que le serveur est bien lancé avec:" << std::endl;
-        std::cerr << "   cd build && ./server/rtype_server" << std::endl;
         return 1;
     }
     
     std::cout << "Connecté au serveur! Lancement du jeu..." << std::endl;
     
-    // Initialiser la fenêtre SEULEMENT après connexion réussie
     InitWindow(1024, 768, "R-Type");
     SetTargetFPS(60);
     
-    float playerX = 100.0f;  // Spawn à gauche
-    float playerY = 400.0f;  // Spawn au milieu verticalement
-    float playerRadius = 15.0f;
-    float playerSpeed = 5.0f;
+    // Créer la World ECS
+    World world;
     
-    // Positions des autres joueurs: ID → (X, Y)
-    std::map<int, std::pair<float, float>> otherPlayers;
+    // Créer le joueur local dans l'ECS
+    auto localPlayer = world.CreateEntity();
+    localPlayer->AddComponent<LocalPlayerComponent>();
+    localPlayer->AddComponent<Position>(100.0f, 400.0f);
+    localPlayer->AddComponent<Velocity>(0.0f, 0.0f);
+    localPlayer->AddComponent<ScreenBoundsComponent>(15.0f);
+    localPlayer->AddComponent<ColorComponent>(RGBAColor(0, 0, 255, 255));  // BLUE
     
-    std::vector<Bullet> bullets;
-    
-    // Callback quand un autre joueur bouge
-    client.SetOnPlayerMoved([&](int client_id, float playerX, float playerY) {
-        // poiton absolue
-        otherPlayers[client_id] = {playerX, playerY};
+    // Callbacks pour les messages du serveur
+    client.SetOnPlayerMoved([&](int clientId, float px, float py) {
+        // Chercher ou créer l'entity pour ce client distant
+        auto remotePlayer = world.GetEntity(clientId + 1000); // ID offset pour éviter collision avec ID local
+        if (!remotePlayer) {
+            remotePlayer = world.CreateEntity();
+            remotePlayer->AddComponent<RemotePlayerComponent>(clientId);
+            remotePlayer->AddComponent<Position>(px, py);
+            remotePlayer->AddComponent<ColorComponent>(RGBAColor(255, 0, 0, 255));  // RED
+        } else {
+            remotePlayer->GetComponent<Position>().x = px;
+            remotePlayer->GetComponent<Position>().y = py;
+        }
     });
     
-    // Callback pour les bullets
-    client.SetOnBulletSpawned([&](Bullet bullet) { 
-        bullets.push_back(bullet); 
-        std::cout << "Bullet reçue: ID=" << bullet.bullet_id 
-                  << " pos=(" << bullet.x << "," << bullet.y << ")" << std::endl;
+    client.SetOnBulletSpawned([&](Bullet bulletData) {
+        auto bulletEntity = world.CreateEntity();
+        bulletEntity->AddComponent<BulletComponent>(bulletData.bullet_id, bulletData.lifetime);
+        bulletEntity->AddComponent<Position>(bulletData.x, bulletData.y);
+        bulletEntity->AddComponent<Velocity>(bulletData.vx, bulletData.vy);
+        bulletEntity->AddComponent<ColorComponent>(RGBAColor(255, 255, 0, 255));  // YELLOW
     });
     
-    // La lecture des messages serveur démarre automatiquement après connexion
+    client.SetOnEnemySpawned([&](int enemyId, float x, float y, float vx, float vy) {
+        auto enemyEntity = world.CreateEntity();
+        enemyEntity->AddComponent<LocalEnemyComponent>(enemyId);
+        enemyEntity->AddComponent<Position>(x, y);
+        enemyEntity->AddComponent<Velocity>(vx, vy);
+        enemyEntity->AddComponent<ColorComponent>(RGBAColor(0, 255, 0, 255));  // GREEN
+    });
     
-    // 🎮 Boucle principale du jeu - continue tant que la fenêtre n'est PAS fermée
     while (!WindowShouldClose()) {
-        // ASIO events
         client.Update();
         
-        // Vérification immédiate de la connexion à chaque frame
-        // 🔌 Vérifier si on a perdu la connexion avec le serveur
         if (!client.IsConnected()) {
-            std::cerr << "Connexion perdue avec le serveur! Fermeture du jeu..." << std::endl;
+            std::cerr << "Connexion perdue!" << std::endl;
             break;
         }
         
-        float deltaTime = GetFrameTime(); // Raylib fonction pour deltaTime
+        float deltaTime = GetFrameTime();
         
-        // control
-        HandleInput(playerX, playerY, playerRadius, playerSpeed, client);
+        HandleInput(world, client);
+        PhysicsSystem::Update(world, deltaTime);
+        UpdateBulletsLifetime(world, deltaTime);
         
-        // MAj mouvement balles
-        UpdateBullets(bullets, deltaTime);
-        
-        // Afficher le rendu
-        Render(playerX, playerY, playerRadius, otherPlayers, bullets);
+        BeginDrawing();
+        ClearBackground(BLACK);
+        RenderSystem::Render(world);
+        RenderUI(world);
+        EndDrawing();
     }
     
     client.Disconnect();
@@ -229,3 +254,4 @@ int main() {
     
     return 0;
 }
+
