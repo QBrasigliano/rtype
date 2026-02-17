@@ -47,3 +47,5 @@ public:
         components_.erase(std::type_index(typeid(T)));
     }
 };
+
+Entity:AddComponent<T>()
