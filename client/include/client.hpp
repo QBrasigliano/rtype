@@ -3,6 +3,7 @@
 
 #include <string>
 #include <asio.hpp>
+#include "Protocol.hpp" 
 
 class Client {
 private:
@@ -14,6 +15,7 @@ private:
                 // et socket est dans tcp
 
     bool is_connected_;
+    std::queue<Packet> packet_queue_;
 
 public:
     Client(const std::string& ip, uint16_t port);
@@ -24,8 +26,8 @@ public:
     bool isConnected() const;
     void send_packet(const Packet& packet);             // pour l'envoie, j'ai une copie de packet (rapidite) et je l'envoie, pas de bug
     Packet receive_packet();                // la reception renvoie le packet recu
-    void send_movement(uint8_t direction);         // envoie une direction a l'aide de la direction sur 8 bit
-    void send_ready();
+    void queue_packet(const Packet& packet);         // je prend la copie du paket je met dans la queue
+    void send_queued_packets();              // envoie des packets dans la queue
 };
 
 #endif
