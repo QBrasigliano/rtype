@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <vector>
 
+constexpr uint16_t PACKET_HEADER = 0xDEAD;          // check le debut d'un packet (2 bytes 0xDE et 0xAD) 
+
 enum class PacketType : uint8_t {
     MOVE_UP = 0x01,         // plus efficace que (PacketType type = PacketType::MOVE_UP;)
     MOVE_DOWN = 0x02,
@@ -20,6 +22,8 @@ struct Packet {
     std::vector<uint8_t> data;          // size bytes de data
     uint16_t checksum;          // 16 bits pour checker si tt est la
 
+    uint16_t CalculateChecksum() const;
+    bool IsValid() const;
     std::vector<uint8_t> Serialize() const;             // renvoie les header, type, data et checksum en un tableau de byte pour l'envoyer
-    void Deserialize(const uint8_t* buffer, size_t length);         // prend un tableau de byte et le transforme en packet
+    static bool Deserialize(const std::vector<uint8_t>& bytes, Packet& packet);         // prend un tableau de byte et le transforme en packet
 };

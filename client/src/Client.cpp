@@ -28,7 +28,8 @@ Packet Client::receive_packet() {
     Packet packet;
     std::vector<uint8_t> buffer(1024);
     size_t bytes_received = socket_.read_some(asio::buffer(buffer));
-    packet.Deserialize(buffer.data(), bytes_received);      // serialize et deserialize a faire dans packet de protocol         !!!
+    buffer.resize(bytes_received);
+    Packet::Deserialize(buffer, packet);
     return packet;
 }
 
@@ -47,6 +48,6 @@ void Client::connect() {
     try {
         // trouver une adresse ip et un port pour se connecter
     } catch (const std::exception& e) {
-        // sinonn erruer
+        std::cerr << "Connection error: " << e.what() << std::endl;
     }
 }

@@ -1,6 +1,8 @@
 add_executable(rtype_client
     src/main.cpp
     src/Client.cpp
+    src/Protocol.cpp
+)
 
 target_include_directories(rtype_client
     PRIVATE include
