@@ -27,3 +27,5 @@ struct Packet {
     std::vector<uint8_t> Serialize() const;             // renvoie les header, type, data et checksum en un tableau de byte pour l'envoyer
     static bool Deserialize(const std::vector<uint8_t>& bytes, Packet& packet);         // prend un tableau de byte et le transforme en packet
 };
+
+#endif

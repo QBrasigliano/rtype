@@ -1,5 +1,6 @@
 #include "../include/Client.hpp"
 #include <iostream>
+#include <queue>
 
 Client::Client(const std::string& ip, uint16_t port)
     : ip_(ip), port_(port), socket_(io_), is_connected_(false) {}
@@ -20,7 +21,7 @@ bool Client::isConnected() const {
 
 
 void Client::send_packet(const Packet& packet) {
-    auto bytes = packet.Serialize();                // serialize et deserialize a faire dans packet de protocol         !!!
+    auto bytes = packet.Serialize();
     asio::write(socket_, asio::buffer(bytes));
 }
 
@@ -46,7 +47,10 @@ void Client::send_queued_packets() {
 
 void Client::connect() {
     try {
-        // trouver une adresse ip et un port pour se connecter
+        asio::ip::tcp::resolver resolver(io_);
+        auto endpoints = resolver.resolve(ip_, std::to_string(port_));
+        asio::connect(socket_, endpoints);
+        is_connected_ = true;
     } catch (const std::exception& e) {
         std::cerr << "Connection error: " << e.what() << std::endl;
     }

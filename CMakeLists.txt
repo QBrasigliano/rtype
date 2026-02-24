@@ -15,5 +15,6 @@ add_compile_options(-ffast-math -funroll-loops)
 include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake OPTIONAL)
 enable_testing()
 
-add_subdirectory(engine)
-add_subdirectory(server)
+# add_subdirectory(engine)
+# add_subdirectory(server)
+add_subdirectory(client)

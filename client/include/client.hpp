@@ -2,6 +2,7 @@
 #define CLIENT_HPP
 
 #include <string>
+#include <queue>
 #include <asio.hpp>
 #include "Protocol.hpp" 
 
